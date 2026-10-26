@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, errorMessage } from '@/client/api';
 import { Card, ErrorBox, Field } from '@/components/ui';
+import { Logo } from '@/components/Logo';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function AdminLogin() {
         router.replace(r.admin.mustChangePassword ? '/admin/change-password' : '/admin');
       } catch (e2) { setError(errorMessage(e2)); } finally { setBusy(false); }
     }}>
-      <img src="/logo.png" alt="MOBI-NURSE" style={{ width: 220, margin: '0 auto' }} />
+      <div className="center"><Logo width={220} /></div>
       <h1 className="center">MOBI-NURSE ADMIN</h1>
       <ErrorBox error={error} />
       <Card className="stack">

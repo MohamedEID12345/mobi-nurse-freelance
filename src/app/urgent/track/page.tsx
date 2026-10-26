@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { api, errorMessage } from '@/client/api';
 import { BookingTracker, CustomerBooking } from '@/components/BookingTracker';
 import { ErrorBox, Spinner } from '@/components/ui';
+import { Logo } from '@/components/Logo';
 
 function Tracker() {
   const sp = useSearchParams();
@@ -54,7 +55,7 @@ function Tracker() {
 export default function TrackPage() {
   return (
     <div className="app-shell">
-      <div className="app-header"><Link href="/"><img src="/logo.png" alt="MOBI-NURSE" /></Link><Link href="/urgent" className="small">طلب جديد</Link></div>
+      <div className="app-header"><Link href="/"><Logo height={34} /></Link><Link href="/urgent" className="small">طلب جديد</Link></div>
       <Suspense fallback={<Spinner />}><Tracker /></Suspense>
     </div>
   );

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SessionProvider, useSession } from '@/components/session';
 import { useApi } from '@/client/hooks';
+import { Logo } from '@/components/Logo';
 
 const CUSTOMER_NAV = [
   { href: '/app', ico: '🏠', label: 'الرئيسية' },
@@ -28,7 +29,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Link href={home}><img src="/logo.png" alt="MOBI-NURSE" /></Link>
+        <Link href={home}><Logo height={34} /></Link>
         <div className="row">
           <a href="https://wa.me/201062569857" className="small" aria-label="الدعم">💬 الدعم</a>
           <Link href="/app/notifications" className="bell" aria-label="الإشعارات">🔔{unread.data?.unread ? <span className="dot">{unread.data.unread}</span> : null}</Link>

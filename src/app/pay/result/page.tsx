@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { verifyRedirectSignature } from '@/lib/kashier';
 import { applyKashierResult } from '@/lib/payments';
 import { money } from '@/lib/shared/labels';
+import { Logo } from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,7 +49,7 @@ export default async function PayResult({ searchParams }: { searchParams: Promis
 
   return (
     <div className="app-shell"><div className="app-content">
-      <img src="/logo.png" alt="MOBI-NURSE" style={{ width: 180, margin: '1rem auto' }} />
+      <div className="center" style={{ margin: '1rem 0' }}><Logo width={180} /></div>
       <div className={`card center stack`}>
         <div style={{ fontSize: '3rem' }}>{view.icon}</div>
         <h1>{view.title}</h1>

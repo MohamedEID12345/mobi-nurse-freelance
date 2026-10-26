@@ -7,6 +7,7 @@ import { useApi } from '@/client/hooks';
 import { ErrorBox, Spinner } from './ui';
 import { ADMIN_ROLES } from '@/lib/shared/labels';
 import type { Permission } from '@/lib/shared/permissions';
+import { Logo } from '@/components/Logo';
 
 export interface AdminMe { id: string; email: string; fullName: string; role: string; mustChangePassword: boolean; permissions: Permission[] }
 
@@ -42,7 +43,7 @@ function Sidebar({ me }: { me: AdminMe }) {
   const stats = useApi<{ stats: Record<string, number> }>(me.permissions.includes('DASHBOARD_VIEW') ? '/api/v1/admin/dashboard' : null, { poll: 60000 });
   return (
     <aside className="admin-side">
-      <img src="/logo.png" alt="MOBI-NURSE" />
+      <Logo />
       {NAV.filter((n) => me.permissions.includes(n.perm)).map((n) => {
         const count = n.badge ? Number(stats.data?.stats?.[n.badge] ?? 0) : 0;
         const active = n.href === '/admin' ? path === '/admin' : path.startsWith(n.href);

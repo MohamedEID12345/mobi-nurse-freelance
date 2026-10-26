@@ -6,6 +6,7 @@ import { api, errorMessage, newIdempotencyKey } from '@/client/api';
 import { Card, ErrorBox, Field, Money, Spinner } from '@/components/ui';
 import { LocationPicker } from '@/components/LocationPicker';
 import { Gov, GeoSelect } from '@/components/GeoSelect';
+import { Logo } from '@/components/Logo';
 
 interface Service { id: string; nameAr: string; price: number; travelFee: number; total: number }
 
@@ -58,7 +59,7 @@ export default function UrgentPage() {
 
   return (
     <div className="app-shell">
-      <div className="app-header"><Link href="/"><img src="/logo.png" alt="MOBI-NURSE" /></Link><Link href="/urgent/track" className="small">متابعة طلب</Link></div>
+      <div className="app-header"><Link href="/"><Logo height={34} /></Link><Link href="/urgent/track" className="small">متابعة طلب</Link></div>
       <form className="app-content" onSubmit={submit}>
         <h1>🚨 طلب تمريض عاجل</h1>
         <div className="alert danger">

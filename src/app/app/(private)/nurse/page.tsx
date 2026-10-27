@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { api, errorMessage } from '@/client/api';
 import { useApi } from '@/client/hooks';
 import { getLocation } from '@/client/location';
-import { isAndroidApp } from '@/client/native';
+import { isAndroidApp, playRequestSound, syncBackgroundOnline } from '@/client/native';
+import { NurseAlertsCard } from '@/components/NurseAlertsCard';
 import { useSession } from '@/components/session';
 import { ActionButton, Card, ErrorBox, KV, Money, Spinner, StatusBadge } from '@/components/ui';
 import { DOC_TYPES, VERIFICATION_STATUS, dateTime } from '@/lib/shared/labels';
@@ -19,19 +20,6 @@ interface Offer {
   scheduledAt: string | null; cityName?: string; distanceKm: number; total: number; nurseAmount: number; expiresAt: string;
 }
 interface Live { isOnline: boolean; offers: Offer[]; activeJobs: Array<{ id: string; code: string; status: string; serviceName: string; patientName: string; scheduledAt: string | null }> }
-
-function beep() {
-  try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    [0, 0.25, 0.5].forEach((t) => {
-      const o = ctx.createOscillator(); const g = ctx.createGain();
-      o.frequency.value = 880; o.connect(g); g.connect(ctx.destination);
-      g.gain.setValueAtTime(0.25, ctx.currentTime + t); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.2);
-      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.2);
-    });
-  } catch { /* sound optional */ }
-}
 
 function Onboarding({ p, reload }: { p: Profile; reload: () => void }) {
   const docsDone = p.missingDocuments.length === 0;
@@ -81,7 +69,7 @@ function Dashboard({ p }: { p: Profile }) {
     try {
       const d = await api<Live>('/api/v1/nurse/offers');
       const fresh = d.offers.filter((o) => !seen.current.has(o.bookingId));
-      if (fresh.length && initialized.current) beep();
+      if (fresh.length && initialized.current) playRequestSound();
       initialized.current = true;
       d.offers.forEach((o) => seen.current.add(o.bookingId));
       setLive(d); setError(null);
@@ -93,6 +81,14 @@ function Dashboard({ p }: { p: Profile }) {
     const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 6000);
     return () => clearInterval(t);
   }, [load]);
+
+  // Inside the Android app: keep the background service in sync with the online status.
+  const synced = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!live || synced.current === live.isOnline) return;
+    synced.current = live.isOnline;
+    void syncBackgroundOnline(live.isOnline);
+  }, [live]);
 
   // Location heartbeat while online (only while the app is open).
   useEffect(() => {
@@ -107,9 +103,13 @@ function Dashboard({ p }: { p: Profile }) {
     try {
       if (live?.isOnline) {
         await api('/api/v1/nurse/status', { body: { online: false } });
+        synced.current = false;
+        await syncBackgroundOnline(false);
       } else {
         const c = await getLocation(true);
         await api('/api/v1/nurse/status', { body: { online: true, latitude: c.latitude, longitude: c.longitude } });
+        synced.current = true;
+        await syncBackgroundOnline(true);
       }
       await load();
     } catch (e) { setError(errorMessage(e)); } finally { setToggling(false); }
@@ -129,6 +129,7 @@ function Dashboard({ p }: { p: Profile }) {
       </Card>
       {!me.governorateActive && <div className="alert warn">الخدمة غير مفعّلة في محافظتك بعد، ولا يمكن الاتصال حالياً.</div>}
       <ErrorBox error={error} onRetry={load} />
+      <NurseAlertsCard online={Boolean(live?.isOnline)} />
       {live?.isOnline && !isAndroidApp() && <div className="alert info small">اترك هذه الصفحة مفتوحة لاستقبال الطلبات، أو استخدم تطبيق الأندرويد لتصلك الإشعارات.</div>}
 
       {(live?.activeJobs ?? []).map((j) => (

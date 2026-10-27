@@ -1,6 +1,6 @@
 import { db } from './db';
 import { must } from './http';
-import { notify } from './notify';
+import { dismissOfferAlerts, notify } from './notify';
 import { loadSettings, num, Settings } from './settings';
 import type { BookingRow } from './bookings';
 import { money } from './shared/labels';
@@ -34,6 +34,8 @@ export async function dispatch(b: BookingRow, s?: Settings): Promise<number> {
     body: `${b.service_name_ar} • على بعد ${n.distance_km.toFixed(1)} كم • ربحك ${money(b.nurse_amount)}`,
     link: '/app/nurse',
     channel: 'requests',
+    ttlSeconds: Math.round(timeoutMs / 1000),
+    bookingId: b.id,
   })));
   return nurses.length;
 }
@@ -57,6 +59,7 @@ export async function refreshSearch(b: BookingRow): Promise<BookingRow> {
       p_reason: 'لم يتوفر ممرض خلال مدة البحث', p_lat: null, p_lng: null,
     });
     if (!error && data) {
+      await dismissOfferAlerts(b.id);
       await notify([b.customer_id], {
         title: 'لم نجد ممرضاً متاحاً', body: `نعتذر، لم يتوفر ممرض لطلبك ${b.code}. يمكنك إعادة الطلب في أي وقت.`,
         link: `/app/bookings/${b.id}`,

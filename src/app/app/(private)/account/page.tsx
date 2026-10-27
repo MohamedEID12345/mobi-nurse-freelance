@@ -6,7 +6,7 @@ import { useSession } from '@/components/session';
 import { ActionButton, Card, ErrorBox, Field } from '@/components/ui';
 import { LocationPicker } from '@/components/LocationPicker';
 import { Gov, GeoSelect } from '@/components/GeoSelect';
-import { isAndroidApp } from '@/client/native';
+import { isAndroidApp, syncBackgroundOnline } from '@/client/native';
 
 export default function Account() {
   const { me, reload } = useSession();
@@ -67,6 +67,10 @@ export default function Account() {
         <Link className="list-item" href="/policies/emergency?embed=1">تنبيه الحالات الطارئة <span>‹</span></Link>
       </Card>
       <ActionButton className="block danger" onClick={async () => {
+        if (me.role === 'NURSE') {
+          await api('/api/v1/nurse/status', { body: { online: false } }).catch(() => undefined);
+          await syncBackgroundOnline(false);
+        }
         await api('/api/v1/auth/logout', { body: {} });
         window.location.href = '/app/login';
       }}>تسجيل الخروج</ActionButton>

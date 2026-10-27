@@ -10,7 +10,7 @@ export const POST = handler(async (req) => {
   const user = await requireUser(req, 'NURSE');
   const b = await parseBody(req, onlineSchema);
   if (!b.online) {
-    must(await db().from('nurse_profiles').update({ is_online: false }).eq('user_id', user.id));
+    must(await db().from('nurse_profiles').update({ is_online: false, heartbeat_token_hash: null, heartbeat_expires_at: null }).eq('user_id', user.id));
     return ok({ isOnline: false });
   }
   const p = await getNurseProfile(user.id);

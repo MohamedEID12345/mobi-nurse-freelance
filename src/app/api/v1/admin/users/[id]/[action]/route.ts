@@ -15,7 +15,7 @@ export const POST = handler(async (req, { id, action }) => {
   if (action === 'suspend') {
     if (!reason) throw new ApiError('VALIDATION_FAILED', { reason: 'required' });
     must(await db().from('app_users').update({ status: 'SUSPENDED', suspension_reason: reason }).eq('id', id));
-    if (target.role === 'NURSE') await db().from('nurse_profiles').update({ is_online: false }).eq('user_id', id);
+    if (target.role === 'NURSE') await db().from('nurse_profiles').update({ is_online: false, heartbeat_token_hash: null }).eq('user_id', id);
     await revokeAllSessions('USER', id);
   } else if (action === 'reactivate') {
     must(await db().from('app_users').update({ status: 'ACTIVE', suspension_reason: null }).eq('id', id));

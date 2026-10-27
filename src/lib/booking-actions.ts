@@ -1,6 +1,6 @@
 import { db } from './db';
 import { ApiError, must } from './http';
-import { notify } from './notify';
+import { dismissOfferAlerts, notify } from './notify';
 import { startPayment } from './payments';
 import { BookingRow, CUSTOMER_CANCELLABLE, transition } from './bookings';
 import { reviewSchema } from './validators';
@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 export async function customerCancel(b: BookingRow, actorType: 'CUSTOMER' | 'GUEST', actorId: string | null, reason?: string) {
   const updated = await transition(b.id, 'CANCELLED', CUSTOMER_CANCELLABLE, actorType, actorId, reason || 'ألغاه العميل');
+  if (b.status === 'SEARCHING') await dismissOfferAlerts(b.id);
   if (b.nurse_id) {
     await notify([b.nurse_id], { title: 'تم إلغاء الطلب', body: `ألغى العميل الطلب ${b.code}.`, link: '/app/nurse' });
   }

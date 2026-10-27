@@ -3,7 +3,7 @@ import { ApiError, handler, must, ok } from '@/lib/http';
 import { requireAdmin } from '@/lib/auth';
 import { BookingStatus, getBooking, transition } from '@/lib/bookings';
 import { dispatch } from '@/lib/matching';
-import { notify } from '@/lib/notify';
+import { dismissOfferAlerts, notify } from '@/lib/notify';
 import { audit } from '@/lib/audit';
 import { readJson } from '@/lib/booking-actions';
 
@@ -18,6 +18,7 @@ export const POST = handler(async (req, { id, action }) => {
     case 'cancel': {
       if (!reason) throw new ApiError('VALIDATION_FAILED', { reason: 'required' });
       await transition(id, 'CANCELLED', ADMIN_CANCELLABLE, 'ADMIN', admin.id, reason);
+      if (b.status === 'SEARCHING') await dismissOfferAlerts(id);
       await notify([b.customer_id, b.nurse_id], { title: 'تم إلغاء الطلب', body: `تم إلغاء الطلب ${b.code} من الإدارة: ${reason}`, link: '/app' });
       break;
     }

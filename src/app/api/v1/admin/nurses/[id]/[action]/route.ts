@@ -26,18 +26,18 @@ export const POST = handler(async (req, { id, action }) => {
     }
     case 'reject': {
       if (!reason) throw new ApiError('VALIDATION_FAILED', { reason: 'required' });
-      patch = { verification_status: 'REJECTED', rejection_reason: reason, is_online: false };
+      patch = { verification_status: 'REJECTED', rejection_reason: reason, is_online: false, heartbeat_token_hash: null };
       message = { title: 'لم يتم اعتماد الحساب', body: `السبب: ${reason}. يمكنك تعديل المستندات وإعادة الإرسال.` };
       break;
     }
     case 'request-resubmission': {
       if (!reason) throw new ApiError('VALIDATION_FAILED', { reason: 'required' });
-      patch = { verification_status: 'RESUBMISSION_REQUESTED', rejection_reason: reason, documents_submitted_at: null, is_online: false };
+      patch = { verification_status: 'RESUBMISSION_REQUESTED', rejection_reason: reason, documents_submitted_at: null, is_online: false, heartbeat_token_hash: null };
       message = { title: 'مطلوب إعادة رفع مستندات', body: `برجاء إعادة رفع المستندات: ${reason}` };
       break;
     }
     case 'force-offline':
-      patch = { is_online: false };
+      patch = { is_online: false, heartbeat_token_hash: null };
       break;
     default:
       throw new ApiError('NOT_FOUND');

@@ -48,7 +48,16 @@ export function pushEnabled(): boolean {
 
 /** Sends a push to Android devices. Silently does nothing if Firebase is not configured. */
 export async function sendPush(targets: Array<{ userId: string; token: string }>,
-                               msg: { title: string; body: string; link?: string; channel?: 'requests' | 'general' }) {
+                               msg: { title: string; body: string; link?: string; channel?: 'requests' | 'general'; ttlSeconds?: number; bookingId?: string }) {
+  await sendData(targets, {
+    type: 'notify', title: msg.title, body: msg.body, link: msg.link ?? '/app', channel: msg.channel ?? 'general',
+    ...(msg.ttlSeconds ? { ttl: String(Math.round(msg.ttlSeconds)) } : {}),
+    ...(msg.bookingId ? { bookingId: msg.bookingId } : {}),
+  }, msg.channel === 'requests' ? Math.max(30, Math.round(msg.ttlSeconds ?? 120)) : 86400);
+}
+
+/** Low-level FCM data message (all values must be strings). */
+export async function sendData(targets: Array<{ userId: string; token: string }>, data: Record<string, string>, ttlSeconds = 86400) {
   const sa = serviceAccount();
   if (!sa || targets.length === 0) return;
   try {
@@ -60,8 +69,8 @@ export async function sendPush(targets: Array<{ userId: string; token: string }>
         body: JSON.stringify({
           message: {
             token: t.token,
-            data: { title: msg.title, body: msg.body, link: msg.link ?? '/app', channel: msg.channel ?? 'general' },
-            android: { priority: 'high', ttl: msg.channel === 'requests' ? '120s' : '86400s' },
+            data,
+            android: { priority: 'high', ttl: `${ttlSeconds}s` },
           },
         }),
       });

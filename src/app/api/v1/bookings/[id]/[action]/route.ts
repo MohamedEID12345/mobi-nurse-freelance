@@ -4,7 +4,7 @@ import { requireUser, UserRow } from '@/lib/auth';
 import { BookingRow, customerView, getBooking, nurseView, transition } from '@/lib/bookings';
 import { customerCancel, nurseName, optionalLocation, readJson, startBookingPayment, submitReview } from '@/lib/booking-actions';
 import { dispatch } from '@/lib/matching';
-import { notify } from '@/lib/notify';
+import { dismissOfferAlerts, notify } from '@/lib/notify';
 import { reviewSchema } from '@/lib/validators';
 import { audit } from '@/lib/audit';
 
@@ -41,6 +41,7 @@ async function nurseAction(req: Request, user: UserRow, b: BookingRow, action: s
   switch (action) {
     case 'accept': {
       const updated = must(await db().rpc('mn_accept_offer', { p_booking: b.id, p_nurse: user.id })) as BookingRow;
+      await dismissOfferAlerts(b.id, user.id);
       await notify([b.customer_id], {
         title: 'تم قبول طلبك ✅', body: `${await nurseName(user.id)} قبل/ت طلبك ${b.code} وسيتحرك إليك قريباً.`, link: `/app/bookings/${b.id}`,
       });
